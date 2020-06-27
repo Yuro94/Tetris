@@ -14,7 +14,5 @@ protocol TetrisViewProtocol: class {
 
     init(centerPoint: CGPoint, coloring: Bool, size: CGFloat, distance: CGFloat)
     
-    func move(in gameView: GameView, speed: Speed, to side: Side, completion: ((TetrisView) -> Void)?)
     func rotate(left: Bool)
-    func moveDidEnd(to side: Side)
 }
