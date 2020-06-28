@@ -102,6 +102,30 @@ class Matrics {
         return true
     }
     
+    public func existMatchesLines(to lines: [Int]) {
+        var changedMatricsData = matricsData
+        
+        var incrementCount = 0
+        var cachedMatricsData = matricsData
+        var sortedLines = lines
+        sortedLines.sort(by: >)
+        for line in sortedLines {
+            for i in 0...(line + incrementCount){
+                for j in 0..<matricsData[i].count {
+                    if i <= incrementCount {
+                        changedMatricsData[i][j] = 0
+                    } else {
+                        changedMatricsData[i][j] = cachedMatricsData[i - 1][j]
+                    }
+                }
+            }
+            cachedMatricsData = changedMatricsData
+            incrementCount += 1
+        }
+        
+        matricsData = changedMatricsData
+    }
+    
 }
 
 extension Matrics: CustomStringConvertible {

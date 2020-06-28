@@ -11,7 +11,6 @@ import UIKit
 
 class GameView: UIView, GameViewProtocol {
     
-    private var matricsData: [[Int]]!
     private var itemSize: CGFloat = 10
     
     private var columnsCount: CGFloat {
@@ -74,7 +73,7 @@ class GameView: UIView, GameViewProtocol {
                 let matricsItemView = UIView(frame: matricsItemFrame)
              
                 matricsItemView.backgroundColor = #colorLiteral(red: 0.9098039269, green: 0.4784313738, blue: 0.6431372762, alpha: 1)
-            
+                matricsItemView.tag = cordinates[i][0]
                 contentView.addSubview(matricsItemView)
                 matricsItemViews.append(matricsItemView)
         }
@@ -130,35 +129,66 @@ class GameView: UIView, GameViewProtocol {
     }
     
     private func removeMatchesItems() {
-        let matchesLines: [Int] = checkTetrisState()
-        guard matchesLines.count > 0 else {
+        let filledLines: [Int] = getFilledLines()
+        guard filledLines.count > 0 else {
             return
+        }
+        print("Matrix View count --- \(matricsItemViews.count)")
+        gameMatrics.existMatchesLines(to: filledLines.reversed())
+        var removedViews: [UIView] = []
+        
+        for line in filledLines {
+            for view in matricsItemViews {
+                if view.tag == line {
+                    removedViews.append(view)
+                    view.removeFromSuperview()
+                } else {
+                    if view.frame.origin.y <= CGFloat(line) * itemSize {
+                        view.frame.origin.y += itemSize
+                    }
+                }
+            }
+        }
+        
+        matricsItemViews.removeAll { (view) -> Bool in
+            removedViews.contains(view)
+        }
+        
+        print("Matrix View count after remove --- \(matricsItemViews.count)")
+        
+        for view in matricsItemViews {
+            var incrementCount = 0
+            for line in filledLines {
+                if view.tag < line {
+                    incrementCount += 1
+                }
+            }
+            view.tag += incrementCount
         }
     }
     
-    private func checkTetrisState() -> [Int] {
+    private func getFilledLines() -> [Int] {
         var lines: [Int] = []
-        let matrics = gameMatrics.matricsData
+        let matricsData = gameMatrics.matricsData
         
-        for i in 0..<matrics.count {
+        for i in 0..<matricsData.count {
             var busyLine: [Int] = []
-            for j in 0..<matrics[i].count {
-                if matrics[i][j] == 1 {
+            for j in 0..<matricsData[i].count {
+                if matricsData[i][j] == 1 {
                     busyLine.append(1)
                 }
             }
             
-            if busyLine.count == matrics[i].count {
+            if busyLine.count == matricsData[i].count {
                 lines.append(i)
             }
         }
         return lines
-        
     }
     
     // Moved functions
     private func setupMatrics() {
-        matricsData = [[Int]].init(repeating: [Int].init(repeating: 0, count: Int(columnsCount)), count: Int(rowsCount))
+        let matricsData = [[Int]].init(repeating: [Int].init(repeating: 0, count: Int(columnsCount)), count: Int(rowsCount))
         gameMatrics = Matrics(matricsData)
     }
     
@@ -174,8 +204,10 @@ class GameView: UIView, GameViewProtocol {
 //    }
     
     private func isPlaceSafe(for side: Side, cordinates: [[Int]]) -> Bool {
-        if tetrisView.frame.origin.y + tetrisView.frame.size.height >= frame.size.height {
-            return false
+        if side == .down {
+            if tetrisView.frame.origin.y + tetrisView.frame.size.height >= frame.size.height {
+                return false
+            }
         }
         
         var boolValue = true
@@ -278,10 +310,6 @@ class GameView: UIView, GameViewProtocol {
         }
     }
     
-    private func canMoveDown() -> Bool {
-        return tetrisView.frame.origin.y + tetrisView.frame.size.height < frame.size.height
-    }
-    
     // MARK: -- Move actions
     
     func move(to side: Side, speed: Speed) {
@@ -291,6 +319,7 @@ class GameView: UIView, GameViewProtocol {
                 moveDownOneStep = false
             }
             moveDown(speed: speed) {
+                self.removeMatchesItems()
                 if self.superview != nil {
                     self.setupTetrisItem()
                 }
