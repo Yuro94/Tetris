@@ -60,8 +60,8 @@ enum TetrisType {
     }
     
     static var allInitialMatrix: [[[Int]]] {
-//        return [squareMatrix, lineMatrix, tMatrix, lMatrix, jMatrix, zMatrix, sMatrix]
-        return [lineMatrix]
+        return [squareMatrix, lineMatrix, tMatrix, lMatrix, jMatrix, zMatrix, sMatrix]
+//        return [lineMatrix]
         
     }
 }
