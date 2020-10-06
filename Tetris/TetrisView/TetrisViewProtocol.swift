@@ -14,5 +14,5 @@ protocol TetrisViewProtocol: class {
 
     init(centerPoint: CGPoint, coloring: Bool, size: CGFloat, distance: CGFloat)
     
-    func rotate(left: Bool)
+    func rotate(side: Side)
 }

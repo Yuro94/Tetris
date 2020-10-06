@@ -134,12 +134,10 @@ class TetrisView: UIView, TetrisViewProtocol {
     
     // MARK: -- Protocol methods
 
-    func rotate(left: Bool) {
-        if left {
-            tetrisItem.matrics.rotate(clockWise: false, by: 1)
-        } else {
-            tetrisItem.matrics.rotate(clockWise: true, by: 1)
-        }
+    func rotate(side: Side) {
+        let clockWise: Bool = (side == .left) ? false : true
+        tetrisItem.matrics.rotate(clockWise: clockWise, by: 1)
+       
         setupTetrisItemsAgain()
     }
     

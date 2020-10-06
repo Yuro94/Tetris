@@ -15,5 +15,6 @@ protocol GameViewProtocol: class {
     func setup(tetrisItemSize: CGFloat)
     func move(to side: Side, speed: Speed)
     func moveDidEnd(to side: Side)
-    func rotate(left: Bool)
+    func moveFastStart(to side: Side)
+    func rotate(side: Side)
 }

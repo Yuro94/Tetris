@@ -14,10 +14,10 @@ class GameView: UIView, GameViewProtocol {
     private var itemSize: CGFloat = 10
     
     private var columnsCount: CGFloat {
-        self.frame.width / itemSize
+        CGFloat(Int(self.frame.width / itemSize))
     }
     private var rowsCount: CGFloat {
-        self.frame.height / itemSize
+        CGFloat(Int(self.frame.height / itemSize))
     }
     
     private var tetrisView: TetrisView!
@@ -29,7 +29,7 @@ class GameView: UIView, GameViewProtocol {
     private var matricsItemViews: [UIView] = []
     public var currentIJCompositions: [[Int]] = []
     
-    public var oneTapWork = true
+    public var moveHorizontalOneStep = true
     public var moveDownOneStep = true
     
     override init(frame: CGRect) {
@@ -88,8 +88,7 @@ class GameView: UIView, GameViewProtocol {
     private func setupTetrisItem() {
         if tetrisView != nil {
             moveDownOneStep = true
-            oneTapWork = true
-//            markGameMatrics()
+            moveHorizontalOneStep = true
             tetrisView.removeFromSuperview()
         }
         
@@ -97,7 +96,7 @@ class GameView: UIView, GameViewProtocol {
         var xPoint: CGFloat = 0
         
         var delta: CGFloat = 0
-        let diff = center.x / 2 - itemSize
+        let diff = contentView.center.x - itemSize
         
         while (Int(diff + delta) % Int(itemSize)) != 0 {
             delta -= 1
@@ -116,16 +115,21 @@ class GameView: UIView, GameViewProtocol {
     }
     
     func moveDidEnd(to side: Side) {
+        moveDownOneStep = true
+        moveHorizontalOneStep = true
+    }
+    
+    func moveFastStart(to side: Side) {
         switch side {
         case .down:
-            moveDownOneStep = true
-        case .left, .right:
-            oneTapWork = false
+            moveDownOneStep = false
+        default:
+            moveHorizontalOneStep = false
         }
     }
     
-    func rotate(left: Bool) {
-        tetrisView.rotate(left: left)
+    func rotate(side: Side) {
+        tetrisView.rotate(side: side)
     }
     
     private func removeMatchesItems() {
@@ -133,7 +137,6 @@ class GameView: UIView, GameViewProtocol {
         guard filledLines.count > 0 else {
             return
         }
-        print("Matrix View count --- \(matricsItemViews.count)")
         gameMatrics.existMatchesLines(to: filledLines.reversed())
         var removedViews: [UIView] = []
         
@@ -153,8 +156,6 @@ class GameView: UIView, GameViewProtocol {
         matricsItemViews.removeAll { (view) -> Bool in
             removedViews.contains(view)
         }
-        
-        print("Matrix View count after remove --- \(matricsItemViews.count)")
         
         for view in matricsItemViews {
             var incrementCount = 0
@@ -192,20 +193,9 @@ class GameView: UIView, GameViewProtocol {
         gameMatrics = Matrics(matricsData)
     }
     
-//    private func markGameMatrics() {
-//        for busyCoordinates in 0..<currentIJCompositions.count {
-////            let iCordinate = currentIJCompositions[busyCoordinates][0]
-////            let jCordinate = currentIJCompositions[busyCoordinates][1]
-////            let position = iCordinate * gameMatrics.matricsData[iCordinate].count + jCordinate
-//
-////            matricsItemViews[position].backgroundColor = (tetrisView.itemColor != nil) ? tetrisView.itemColor! : UIColor.red
-////            matricsItemViews[busyCoordinates].backgroundColor = #colorLiteral(red: 0.9098039269, green: 0.4784313738, blue: 0.6431372762, alpha: 1)
-//        }
-//    }
-    
     private func isPlaceSafe(for side: Side, cordinates: [[Int]]) -> Bool {
         if side == .down {
-            if tetrisView.frame.origin.y + tetrisView.frame.size.height >= frame.size.height {
+            if tetrisView.frame.origin.y + tetrisView.frame.size.height >= contentView.frame.size.height {
                 return false
             }
         }
@@ -223,7 +213,9 @@ class GameView: UIView, GameViewProtocol {
             
             switch side {
             case .down:
-                iCordinate = addedMatrics[0] + 1
+                if addedMatrics[0] + 1 < gameMatrics!.matricsData.count {
+                    iCordinate = addedMatrics[0] + 1
+                }
                 jCordinate = addedMatrics[1]
             case .left:
                 iCordinate = addedMatrics[0]
@@ -315,9 +307,6 @@ class GameView: UIView, GameViewProtocol {
     func move(to side: Side, speed: Speed) {
         switch side {
         case .down:
-            if speed == .fast {
-                moveDownOneStep = false
-            }
             moveDown(speed: speed) {
                 self.removeMatchesItems()
                 if self.superview != nil {
@@ -325,7 +314,6 @@ class GameView: UIView, GameViewProtocol {
                 }
             }
         case .left, .right:
-            oneTapWork = true
             moveHorizontal(to: side, speed: speed)
         }
     }
@@ -362,16 +350,16 @@ class GameView: UIView, GameViewProtocol {
             }
         }
         
-        if !isPlaceSafe(for: side, cordinates: getAllBusyCordinates()) || !canMove(to: side) || !oneTapWork {
+        if !isPlaceSafe(for: side, cordinates: getAllBusyCordinates()) || !canMove(to: side) || moveHorizontalOneStep {
             return
         }
         
-        moveHorizontal(to: side, speed: speed) {
+        moveHorizontalByOneStep(to: side, speed: speed) {
             self.moveHorizontal(to: side, speed: speed)
         }
     }
     
-    private func moveHorizontal(to side: Side, speed: Speed, completion: @escaping () -> Void) {
+    private func moveHorizontalByOneStep(to side: Side, speed: Speed, completion: @escaping () -> Void) {
         let xPosition: CGFloat = (side == .left) ? tetrisView.center.x - itemSize : tetrisView.center.x + itemSize
         
         let animTime: TimeInterval = (speed == .slow) ? 0.1 : 0

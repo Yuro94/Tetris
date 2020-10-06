@@ -8,14 +8,7 @@
 
 import Foundation
 
-enum TetrisType {
-    case squareType
-    case lineType
-    case tType
-    case lType
-    case jType
-    case zType
-    case sType
+struct TetrisType {
     
     static var squareMatrix: [[Int]] {
         return [[1, 1],

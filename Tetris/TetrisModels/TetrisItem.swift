@@ -16,7 +16,6 @@ class TetrisItem {
     public init(matrics: Matrics, color: UIColor = TetrisColor.gray.value ) {
         self.matrics = matrics
         self.matrics.matricsData = matrics.moveDownMatrixIfPossible(matrics: matrics.matricsData)
-//        self.matrics.matrics = matrics.moveUpMatrics(matrics: matrics.matrics)
         self.color = color
     }
     
